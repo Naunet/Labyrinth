@@ -1,0 +1,2 @@
+# Labyrinth
+Dynamic labyrinth game
