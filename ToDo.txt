@@ -22,4 +22,6 @@ Change maze colour per level
 
 11. Add music and sound effects
 
-12. Package game
+12. Make available for computer
+
+13. Make available for mobile
