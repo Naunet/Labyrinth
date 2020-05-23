@@ -1,0 +1,25 @@
+1. Add hold down key moves
+
+2. Define what happens when pushed, squished
+
+3. Add transitional movement
+
+4. Add clock to screen
+
+5. Create high score
+
+6. Make window responsive, resizeable
+#define variables eg. a=screen.height//24, the remainder will be the border
+
+7. Improve graphics (shaded walls, character design)
+
+8. Create welcome page
+
+9. Create levels : variable grid size, variable shift speed, variable ratio wall/path
+Change maze colour per level
+
+10. Create level select page
+
+11. Add music and sound effects
+
+12. Package game
