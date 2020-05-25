@@ -1,10 +1,11 @@
 1. Add hold down key moves
 
-2. Define what happens when pushed, squished
+2. Manage game end
 
 3. Add transitional movement
 
 4. Add clock to screen
+And pause visual
 
 5. Create high score
 

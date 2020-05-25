@@ -8,27 +8,21 @@ def background(color):
 
 def initialize_maze():
     """20*22"""
-    maze = [ [is_wall]*20 for i in range(22)]
-    for i in range(1,19):
-        for j in range(1,21):
+    maze = [ [IS_WALL]*GRID_WIDTH for i in range(GRID_HEIGHT)]
+    for i in range(1,GRID_WIDTH-1):
+        for j in range(1,GRID_HEIGHT-1):
             maze[j][i]=(random()<WALL_RATE)
     #clear exits
-    maze[0][4]=not is_wall
-    maze[0][5]=not is_wall
-    maze[0][14]=not is_wall
-    maze[0][15]=not is_wall
-    maze[21][4]=not is_wall
-    maze[21][5]=not is_wall
-    maze[21][14]=not is_wall
-    maze[21][15]=not is_wall
+    for x,y in EXITS:
+        maze[y][x] = not IS_WALL
     #clear start
-    maze[11][10]=not is_wall
+    maze[START_Y][START_X]=not IS_WALL
     return maze
 
 def top_corner(x, y):
     """coordinates to pixels"""
-    x=size*x+b
-    y=size*y+c
+    x=SIZE*x+BORDER_X
+    y=SIZE*y+BORDER_Y
     return (x, y)
 
 def draw_rectangle(topCorner, width, height, color):
@@ -36,22 +30,23 @@ def draw_rectangle(topCorner, width, height, color):
     pygame.draw.rect(window, color, Rect)
 
 def draw_maze(grid, size, color):
-    for j in range(grid_height):
-        for i in range(grid_width):
+    for j in range(GRID_HEIGHT):
+        for i in range(GRID_WIDTH):
             if (grid[j][i]):
                 draw_rectangle(top_corner(i,j), size, size, color)
 
 def draw_char(x, y):
+    #To be improved
     x, y = top_corner(x,y)
     scale = 0.7
-    x += (1-scale)/2*size
-    y += (1-scale)/2*size
-    draw_rectangle((x,y), size*scale, size*scale, (0,0,0,255))
+    x += (1-scale)/2*SIZE
+    y += (1-scale)/2*SIZE
+    draw_rectangle((x,y), SIZE*scale, SIZE*scale, (0,0,0,255))
 
 def handle_interaction(x, y, grid, key=None):
     """records player's interaction"""
     anim={'move':False,'right':False,'left':False,'up':False,'down':False,'quit':False,'pause':False}
-    if key==pygame.K_RIGHT and x<grid_width-1 and not(grid[y][x+1]):
+    if key==pygame.K_RIGHT and x<GRID_WIDTH-1 and not(grid[y][x+1]):
         anim['move'] = True
         anim['right'] = True
     if key==pygame.K_LEFT and x>0 and not(grid[y][x-1]):
@@ -60,13 +55,12 @@ def handle_interaction(x, y, grid, key=None):
     if key==pygame.K_UP and y>0 and not(grid[y-1][x]):
         anim['move'] = True
         anim['up'] = True
-    if key==pygame.K_DOWN and y<grid_height-1 and not(grid[y+1][x]):
+    if key==pygame.K_DOWN and y<GRID_HEIGHT-1 and not(grid[y+1][x]):
         anim['move'] = True
         anim['down'] = True
     if key==pygame.K_q or key==pygame.K_ESCAPE:
         anim['quit'] = True
     if key==pygame.K_SPACE or key==pygame.K_PAUSE:
-        print("Key pressed")
         anim['pause'] = True
     return anim
 
@@ -84,12 +78,10 @@ def move(anim, x, y):
 
 def pause_game(old, change):
     if not old and change:
-        print("Set pause")
         pygame.time.set_timer(USEREVENT+1, 0)
         return True
     if old and change:
-        print("End pause")
-        pygame.time.set_timer(USEREVENT+1, 1000)
+        pygame.time.set_timer(USEREVENT+1, TIMER)
         return False
     return old
 
@@ -97,13 +89,9 @@ def handle_shift(grid, pos_x, pos_y):
     """from anywhere in any direction"""
     #chose orientation
     columns = (random()<0.5) #lines or columns
-    uplim = grid_width-1
-    var_x = 1
-    var_y = 0
+    uplim = GRID_WIDTH-1
     if not columns:
-        uplim = grid_height-1
-        var_x = 0
-        var_y = 1
+        uplim = GRID_HEIGHT-1
 
     #values
     start = 1
@@ -123,86 +111,84 @@ def handle_shift(grid, pos_x, pos_y):
         start = stop
         stop = tmp
         positives = -1
-        var_x = -var_x
-        var_y = -var_y
     
     """shift"""
     for i in range(start, stop, positives):
         if(columns):
-            for y in range(1,grid_height-1):
+            for y in range(1,GRID_HEIGHT-1):
                 grid[y][i]=grid[y][i+positives]
         else:
-            for x in range(1,grid_width-1):
+            for x in range(1,GRID_WIDTH-1):
                 grid[i][x]=grid[i+positives][x]
 
     """create new walls"""
     if(columns):
-        for y in range(1,grid_height-1):
+        for y in range(1,GRID_HEIGHT-1):
             grid[y][stop] = (random()<WALL_RATE)
     else:
-        for x in range(1,grid_width-1):
+        for x in range(1,GRID_WIDTH-1):
             grid[stop][x] = (random()<WALL_RATE)
 
     """clear center"""
-    grid[start_y][start_x] = not is_wall 
+    grid[START_Y][START_X] = not IS_WALL 
 
     """move character"""
-    if(grid[pos_y][pos_x]==is_wall):
+    if(grid[pos_y][pos_x]==IS_WALL):
         if(columns):
-            if(grid[pos_y][pos_x-positives]==is_wall):
-                pos_x = start_x
-                pos_y = start_y
+            if(grid[pos_y][pos_x-positives]==IS_WALL):
+                pos_x = START_X
+                pos_y = START_Y
             else:
                 pos_x -= positives
         else:
-            if(grid[pos_y-positives][pos_x]==is_wall):
-                pos_x = start_x
-                pos_y = start_y
+            if(grid[pos_y-positives][pos_x]==IS_WALL):
+                pos_x = START_X
+                pos_y = START_Y
             else:
                 pos_y -= positives
 
     return pos_x, pos_y
 
 def print_maze(matrix):
-    for i in range(grid_height):
+    for i in range(GRID_HEIGHT):
         print(matrix[i])
 
-# define variables
-is_wall = True
+# define macro variables
+IS_WALL = True
 WALL_RATE = 0.45
-grid_height = 22
-grid_width = 20
-res_x = 510 #swap to dynamic
-res_y = 560 #swap to dynamic
-c_path = (250, 210, 140, 255)
-c_wall = (0, 153, 0, 255)
-size=min(res_x//grid_width, res_y//grid_height)
-b=(res_x-size*grid_width)//2
-c=(res_y-size*grid_height)//2
-start_x = 10 #centre cleared by def
-start_y = 11 #centre cleared by def
-pos_x = start_x
-pos_y = start_y
+GRID_HEIGHT = 22
+GRID_WIDTH = 20
+RES_X = 510 #swap to dynamic
+RES_Y = 560 #swap to dynamic
+C_PATH = (250, 210, 140, 255)
+C_WALL = (0, 153, 0, 255)
+SIZE = min(RES_X//GRID_WIDTH, RES_Y//GRID_HEIGHT)
+BORDER_X = (RES_X-SIZE*GRID_WIDTH)//2
+BORDER_Y = (RES_Y-SIZE*GRID_HEIGHT)//2
+START_X = 10 #centre cleared by def
+START_Y = 11 #centre cleared by def
+EXITS = [(4,0), (5,0), (14,0), (15,0), 
+        (4,21), (5,21), (14,21), (15,21)]
+TIMER = 1000
+
+#define global variables
+pos_x = START_X
+pos_y = START_Y
 
 #setup
 pygame.display.init()
-window = pygame.display.set_mode((res_x,res_y))
+window = pygame.display.set_mode((RES_X,RES_Y))
 pygame.display.set_caption("Moving labyrinth")
-maze=initialize_maze()
-pygame.time.set_timer(USEREVENT+1, 1000) #loop for shift
+maze = initialize_maze()
+pygame.time.set_timer(USEREVENT+1, TIMER) #loop for shift
 
 #program
-background(c_path)
-draw_maze(maze, size, c_wall)
-draw_char(pos_x, pos_y)
-pygame.display.update()
-
 end_game = False
 paused = False
 while not end_game: 
     for event in pygame.event.get():
-        background(c_path)
-        draw_maze(maze, size, c_wall)
+        background(C_PATH)
+        draw_maze(maze, SIZE, C_WALL)
         draw_char(pos_x, pos_y)
         if event.type == USEREVENT+1:
             pos_x, pos_y = handle_shift(maze, pos_x, pos_y)
@@ -213,6 +199,5 @@ while not end_game:
             pos_x, pos_y = move(anim, pos_x, pos_y)
         if event.type == pygame.QUIT:
             end_game = True
-        handle_interaction(pos_x, pos_y, maze) #delete?
         pygame.display.update()
 quit()
