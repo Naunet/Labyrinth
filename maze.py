@@ -93,14 +93,17 @@ def pause_game(old, change):
         return False
     return old
 
-def handle_shift(grid):
+def handle_shift(grid, pos_x, pos_y):
     """from anywhere in any direction"""
     #chose orientation
-    horizontal = (random()<0.5) #horizontal or vertical axis
-    if horizontal:
-        uplim = grid_width-1
-    else:
+    columns = (random()<0.5) #lines or columns
+    uplim = grid_width-1
+    var_x = 1
+    var_y = 0
+    if not columns:
         uplim = grid_height-1
+        var_x = 0
+        var_y = 1
 
     #values
     start = 1
@@ -120,10 +123,12 @@ def handle_shift(grid):
         start = stop
         stop = tmp
         positives = -1
+        var_x = -var_x
+        var_y = -var_y
     
     """shift"""
     for i in range(start, stop, positives):
-        if(horizontal):
+        if(columns):
             for y in range(1,grid_height-1):
                 grid[y][i]=grid[y][i+positives]
         else:
@@ -131,12 +136,32 @@ def handle_shift(grid):
                 grid[i][x]=grid[i+positives][x]
 
     """create new walls"""
-    if(horizontal):
+    if(columns):
         for y in range(1,grid_height-1):
-            grid[y][stop]=(random()<WALL_RATE)
+            grid[y][stop] = (random()<WALL_RATE)
     else:
         for x in range(1,grid_width-1):
-            grid[stop][x]=(random()<WALL_RATE)
+            grid[stop][x] = (random()<WALL_RATE)
+
+    """clear center"""
+    grid[start_y][start_x] = not is_wall 
+
+    """move character"""
+    if(grid[pos_y][pos_x]==is_wall):
+        if(columns):
+            if(grid[pos_y][pos_x-positives]==is_wall):
+                pos_x = start_x
+                pos_y = start_y
+            else:
+                pos_x -= positives
+        else:
+            if(grid[pos_y-positives][pos_x]==is_wall):
+                pos_x = start_x
+                pos_y = start_y
+            else:
+                pos_y -= positives
+
+    return pos_x, pos_y
 
 def print_maze(matrix):
     for i in range(grid_height):
@@ -154,8 +179,10 @@ c_wall = (0, 153, 0, 255)
 size=min(res_x//grid_width, res_y//grid_height)
 b=(res_x-size*grid_width)//2
 c=(res_y-size*grid_height)//2
-pos_x = 10 #centre cleared by def
-pos_y = 11 #centre cleared by def
+start_x = 10 #centre cleared by def
+start_y = 11 #centre cleared by def
+pos_x = start_x
+pos_y = start_y
 
 #setup
 pygame.display.init()
@@ -178,7 +205,7 @@ while not end_game:
         draw_maze(maze, size, c_wall)
         draw_char(pos_x, pos_y)
         if event.type == USEREVENT+1:
-            handle_shift(maze)
+            pos_x, pos_y = handle_shift(maze, pos_x, pos_y)
         if event.type == pygame.KEYDOWN:
             anim = handle_interaction(pos_x, pos_y, maze, event.key)
             end_game = anim['quit']
