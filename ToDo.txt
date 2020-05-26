@@ -1,7 +1,4 @@
-3. Add transitional movement
-
-4. Add clock to screen
-And pause visual
+4. Add transitional movement
 
 5. Create high score
 
