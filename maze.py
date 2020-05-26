@@ -202,8 +202,7 @@ pygame.time.set_timer(USEREVENT+1, TIMER) #loop for shift
 end_game = False
 paused = False
 while not end_game: 
-    #pygame.event.wait()
-    for event in pygame.event.get():
+    for event in [pygame.event.wait()] + pygame.event.get():
         if event.type == USEREVENT+1:
             pos_x, pos_y = handle_shift(maze, pos_x, pos_y)
         if event.type == pygame.KEYDOWN:

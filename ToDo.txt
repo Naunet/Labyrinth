@@ -1,5 +1,3 @@
-2. Make passive wait
-
 3. Add transitional movement
 
 4. Add clock to screen
