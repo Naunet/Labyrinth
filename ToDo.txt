@@ -1,6 +1,4 @@
-1. Add hold down key moves
-
-2. Manage game end
+2. Make passive wait
 
 3. Add transitional movement
 

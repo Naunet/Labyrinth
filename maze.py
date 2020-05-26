@@ -43,7 +43,7 @@ def draw_char(x, y):
     y += (1-scale)/2*SIZE
     draw_rectangle((x,y), SIZE*scale, SIZE*scale, (0,0,0,255))
 
-def handle_interaction(x, y, grid, key=None):
+def handle_interaction(x, y, grid, key):
     """records player's interaction"""
     anim={'move':False,'right':False,'left':False,'up':False,'down':False,'quit':False,'pause':False}
     if key==pygame.K_RIGHT and x<GRID_WIDTH-1 and not(grid[y][x+1]):
@@ -189,6 +189,7 @@ TIMER = 1000
 #define global variables
 pos_x = START_X
 pos_y = START_Y
+key_flags = list()
 
 #setup
 pygame.display.init()
@@ -201,21 +202,34 @@ pygame.time.set_timer(USEREVENT+1, TIMER) #loop for shift
 end_game = False
 paused = False
 while not end_game: 
+    #pygame.event.wait()
     for event in pygame.event.get():
-        background(C_PATH)
-        draw_maze(maze, SIZE, C_WALL)
-        draw_char(pos_x, pos_y)
         if event.type == USEREVENT+1:
             pos_x, pos_y = handle_shift(maze, pos_x, pos_y)
         if event.type == pygame.KEYDOWN:
-            anim = handle_interaction(pos_x, pos_y, maze, event.key)
-            end_game = anim['quit']
-            paused = pause_game(paused, anim['pause'])
-            pos_x, pos_y = move(anim, pos_x, pos_y)
+            key_flags.append(event.key)
+            pygame.time.set_timer(USEREVENT+2, 200) #hold down loop
+        if event.type == pygame.KEYDOWN or event.type == USEREVENT+2:
+            for key in key_flags:
+                anim = handle_interaction(pos_x, pos_y, maze, key)
+                end_game = anim['quit']
+                paused = pause_game(paused, anim['pause'])
+                pos_x, pos_y = move(anim, pos_x, pos_y)
+        if event.type == pygame.KEYUP:
+            key_flags.remove(event.key)
+            if not key_flags:
+                pygame.time.set_timer(USEREVENT+2, 0)
         if event.type == pygame.QUIT:
             end_game = True
+
+        background(C_PATH)
+        draw_maze(maze, SIZE, C_WALL)
+        draw_char(pos_x, pos_y)
+
         if is_end_game(pos_x, pos_y):
-            pause_game(paused, True)
+            paused = True
+            pygame.time.set_timer(USEREVENT+1, 0)
             draw_end()
+
         pygame.display.update()
 quit()
