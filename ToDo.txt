@@ -1,21 +1,21 @@
-4. Add transitional movement
-
-5. Create high score
-
-6. Make window responsive, resizeable
+1. Make window responsive, resizeable
 #define variables eg. a=screen.height//24, the remainder will be the border
 
-7. Improve graphics (shaded walls, character design)
+2. Add transitional movement
 
-8. Create welcome page
+3. Improve graphics (shaded walls, character design)
 
-9. Create levels : variable grid size, variable shift speed, variable ratio wall/path
+4. Create welcome page
+
+5. Show high scores
+
+6. Create levels : variable grid size, variable shift speed, variable ratio wall/path
 Change maze colour per level
 
-10. Create level select page
+7. Create level select page
 
-11. Add music and sound effects
+8. Add music and sound effects
 
-12. Make available for computer
+9. Make available for computer
 
-13. Make available for mobile
+10. Make available for mobile

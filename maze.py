@@ -5,15 +5,11 @@ import time
 
 def background(color, level):
     window.fill(color)
-    text = font.render("Level "+str(level), True, (0,0,20)) 
-    textRect = text.get_rect()
-    offset = (HEADER-textRect.height)//2
-    textRect.topleft = (offset, offset)
-    window.blit(text, textRect)
+    draw_text("Level "+str(level), (RES_X//2,HEADER//2), pygame.Color('black'))
 
 def draw_clock():
     text = font.render("Pause", True, (0,0,0), (255,255,255))
-    if end_level:
+    if level_end:
         time = end_time//1000
         string = "{0:02}:{1:02}".format(time//60, time%60)
         text = font.render(string, True, (255,0,0), (255,255,255)) 
@@ -183,20 +179,81 @@ def is_end_game(x, y):
         return True
     return False
 
+def draw_text(text, pos, color, background=None):
+    word_surface = font.render(text, True, color, background) 
+    rect = word_surface.get_rect() 
+    rect.center = pos 
+    window.blit(word_surface, rect)  
+    return rect.width, rect.height
+
+def blit_text(surface, height, text):
+    words = [word.split(' ') for word in text.splitlines()]
+    max_width, _ = surface.get_size()
+    space = font.size(' ')[0]  #width of a space
+    while words:
+        while(words and not words[0]):
+            words.pop(0)
+        if(not words):
+            break
+        line = ""
+        size = 0
+        word = words[0].pop(0)
+        text = font.render(word, True, (0,0,0), (255,255,255))
+        width, tmp = text.get_size()
+        middle = tmp
+        while(size + space + width < max_width):
+            line+= " " + word
+            size += space + width
+            if(not words[0]):
+                break
+            word = words[0].pop()
+            text = font.render(word, True, (0,0,0), (255,255,255))
+            width, tmp = text.get_size()
+            if tmp<middle:
+                tmp = middle
+        height += middle//2
+        _, tmp = draw_text(line, (max_width//2, height), pygame.Color('black'), pygame.Color('white'))
+        height += tmp//2
+
 def draw_end():
-    text = font.render('Level Complete!', True, (0,0,0), (255,255,255)) 
-    textRect = text.get_rect() 
-    textRect.center = (RES_X//2,RES_Y//3) 
-    window.blit(text, textRect)
+    #read highscores
+    scorefile = open('highscores.txt', 'r+')
+    scorelist = scorefile.readlines()
+    scorefile.close()
+    #check if level already in scores
+    highscore = None
+    for score in scorelist:
+        level, time = score.split(': ')
+        if(level == str(current_level)):
+            highscore = int(time)//1000
+    #display highscore
+    blit_text(window, RES_Y//3, "Level Complete!\nHighscore: \n{0:02}:{1:02}s".format(highscore//60, highscore%60)) 
 
-def save_score(time): #in ms
-    #file open
-    #file write
-    #file save
-    #file close
-    return
-
-#High scores https://stackoverflow.com/questions/17181813/blitting-text-in-pygame
+def save_score(current_time): #in ms
+    #read previous scores
+    scorefile = open('highscores.txt', 'r+')
+    scorelist = scorefile.readlines()
+    scorefile.close()
+    #check if level already in scores
+    exists = None
+    previous = None
+    for score in scorelist:
+        level, time = score.split(': ')
+        if(level == str(current_level)):
+            exists = score
+            previous = int(time)
+    #compare times and update
+    if exists:
+        if(previous>end_time):
+            i = scorelist.index(exists)
+            scorelist.remove(exists)
+            scorelist.insert(i, "{}: {}\n".format(current_level, current_time))
+    else:
+        scorelist.append("{}: {}\n".format(current_level, current_time))
+    #write new scores
+    scorefile = open('highscores.txt', 'w+')
+    scorefile.writelines(scorelist)
+    scorefile.close()
 
 # define macro variables
 GRID_HEIGHT = 22
@@ -224,8 +281,8 @@ LOOP_SHIFT = USEREVENT+1
 pos_x = START_X
 pos_y = START_Y
 key_flags = list()
-level = 1
-end_level = False
+current_level = 3
+level_end = False
 paused_time = 0
 pause_start = None
 end_time = None
@@ -262,12 +319,12 @@ while not close_game:
         if event.type == pygame.QUIT:
             close_game = True
 
-        draw_game(level)
+        draw_game(current_level)
 
         if is_end_game(pos_x, pos_y):
-            if not end_level:
+            if not level_end:
                 end_time = pygame.time.get_ticks()-paused_time
-                end_level = True
+                level_end = True
                 paused = True
                 pygame.time.set_timer(LOOP_SHIFT, 0)
                 save_score(end_time)
