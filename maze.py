@@ -153,6 +153,21 @@ def print_maze(matrix):
     for i in range(GRID_HEIGHT):
         print(matrix[i])
 
+def is_end_game(x, y):
+    if (x, y) in EXITS:
+        return True
+    return False
+
+def draw_end():
+    pygame.font.init()
+    font = pygame.font.Font(pygame.font.get_default_font(), 32)
+    text = font.render('Well Done!', True, (0,0,0), (255,255,255)) 
+    textRect = text.get_rect() 
+    textRect.center = (RES_X//2,RES_Y//4) 
+    window.blit(text, textRect)
+
+#High scores https://stackoverflow.com/questions/17181813/blitting-text-in-pygame
+
 # define macro variables
 IS_WALL = True
 WALL_RATE = 0.45
@@ -199,5 +214,8 @@ while not end_game:
             pos_x, pos_y = move(anim, pos_x, pos_y)
         if event.type == pygame.QUIT:
             end_game = True
+        if is_end_game(pos_x, pos_y):
+            pause_game(paused, True)
+            draw_end()
         pygame.display.update()
 quit()
