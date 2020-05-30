@@ -2,29 +2,7 @@ import pygame
 from pygame.locals import *
 from random import random, randrange
 import time
-
-
-def background(color, level):
-    window.fill(color)
-    draw_text("Level "+str(level),
-              (RES_X//2, HEADER//2),
-              pygame.Color('black'))
-
-
-def draw_clock():
-    text = font.render("Pause", True, (0, 0, 0), (255, 255, 255))
-    if level_end:
-        time = end_time//1000
-        string = "{0:02}:{1:02}".format(time//60, time % 60)
-        text = font.render(string, True, (255, 0, 0), (255, 255, 255))
-    if not paused:
-        time = (pygame.time.get_ticks() - paused_time)//1000  # in seconds
-        string = "{0:02}:{1:02}".format(time//60, time % 60)
-        text = font.render(string, True, (0, 0, 0), (255, 255, 255))
-    textRect = text.get_rect()
-    offset = (HEADER-textRect.height)//2
-    textRect.topright = (RES_X-offset, offset)
-    window.blit(text, textRect)
+import view
 
 
 def initialize_maze():
@@ -39,41 +17,6 @@ def initialize_maze():
     # clear start
     maze[START_Y][START_X] = not IS_WALL
     return maze
-
-
-def top_corner(x, y):
-    """coordinates to pixels"""
-    x = SIZE*x+BORDER_X
-    y = SIZE*y+BORDER_Y
-    return (x, y)
-
-
-def draw_rectangle(topCorner, width, height, color):
-    Rect = pygame.Rect(topCorner[0], topCorner[1], width, height)
-    pygame.draw.rect(window, color, Rect)
-
-
-def draw_maze(size, color):
-    for j in range(GRID_HEIGHT):
-        for i in range(GRID_WIDTH):
-            if maze[j][i]:
-                draw_rectangle(top_corner(i, j), size, size, color)
-
-
-def draw_char(x, y):
-    # To be improved
-    x, y = top_corner(x, y)
-    scale = 0.7
-    x += (1-scale)/2*SIZE
-    y += (1-scale)/2*SIZE
-    draw_rectangle((x, y), SIZE*scale, SIZE*scale, (0, 0, 0, 255))
-
-
-def draw_game(level):
-    background(C_PATH, level)
-    draw_clock()
-    draw_maze(SIZE, C_WALL)
-    draw_char(pos_x, pos_y)
 
 
 def handle_interaction(key):
@@ -176,7 +119,7 @@ def handle_shift(grid):
 
     """move character"""
     if grid[pos_y][pos_x] == IS_WALL:
-        if columns :
+        if columns:
             if grid[pos_y][pos_x-positives] == IS_WALL:
                 pos_x = START_X
                 pos_y = START_Y
@@ -194,61 +137,6 @@ def is_end_game(x, y):
     if (x, y) in EXITS:
         return True
     return False
-
-
-def draw_text(text, pos, color, background=None):
-    word_surface = font.render(text, True, color, background)
-    rect = word_surface.get_rect()
-    rect.center = pos
-    window.blit(word_surface, rect)
-    return rect.width, rect.height
-
-
-def blit_text(surface, height, text):
-    words = [word.split(' ') for word in text.splitlines()]
-    max_width, _ = surface.get_size()
-    space = font.size(' ')[0]  # width of a space
-    while words:
-        while words and not words[0]:
-            words.pop(0)
-        if not words:
-            break
-        line = ""
-        size = 0
-        word = words[0].pop(0)
-        text = font.render(word, True, (0, 0, 0), (255, 255, 255))
-        width, tmp = text.get_size()
-        middle = tmp
-        while size + space + width < max_width:
-            line += " " + word
-            size += space + width
-            if not words[0]:
-                break
-            word = words[0].pop()
-            text = font.render(word, True, (0, 0, 0), (255, 255, 255))
-            width, tmp = text.get_size()
-            if tmp < middle:
-                tmp = middle
-        height += middle//2
-        _, tmp = draw_text(line, (max_width//2, height),
-                           pygame.Color('black'), pygame.Color('white'))
-        height += tmp//2
-
-
-def draw_end():
-    # read highscores
-    scorefile = open('highscores.txt', 'r+')
-    scorelist = scorefile.readlines()
-    scorefile.close()
-    # check if level already in scores
-    highscore = None
-    for score in scorelist:
-        level, time = score.split(': ')
-        if level == str(current_level):
-            highscore = int(time)//1000
-    # display highscore
-    blit_text(window, RES_Y//3,
-              "Level Complete!\nHighscore: \n{0:02}:{1:02}s".format(highscore//60, highscore % 60))
 
 
 def save_score(current_time):  # in ms
@@ -281,21 +169,17 @@ def save_score(current_time):  # in ms
 # define macro variables
 GRID_WIDTH = 20
 GRID_HEIGHT = 22
-RES_X = 510  # swap to dynamic
-RES_Y = 610  # swap to dynamic
+if GRID_WIDTH < 5 or GRID_HEIGHT < 5:
+    # maze too small
+    quit()
 IS_WALL = True
 WALL_RATE = 0.45
-C_PATH = (250, 210, 140, 255)
-C_WALL = (0, 153, 0, 255)
-HEADER = 50
-SIZE = min(RES_X//GRID_WIDTH, (RES_Y-HEADER)//GRID_HEIGHT)
-BORDER_X = (RES_X-SIZE*GRID_WIDTH)//2
-BORDER_Y = HEADER + (RES_Y-SIZE*GRID_HEIGHT-HEADER)//2
-START_X = 10  # centre cleared by def
-START_Y = 11  # centre cleared by def
-EXITS = [(4, 0), (5, 0), (14, 0), (15, 0),
-         (4, GRID_HEIGHT-1), (5, GRID_HEIGHT-1),
-         (14, GRID_HEIGHT-1), (15, GRID_HEIGHT-1)]
+START_X = GRID_WIDTH//2  # centre cleared by def
+START_Y = GRID_HEIGHT//2  # centre cleared by def
+EXITS = [(GRID_WIDTH//2, 0), (GRID_WIDTH//2 + 1, 0),
+         (GRID_WIDTH - 1, GRID_HEIGHT//2), (GRID_WIDTH - 1, GRID_HEIGHT//2 + 1),
+         (0, GRID_HEIGHT//2), (0, GRID_HEIGHT//2 + 1),
+         (GRID_WIDTH//2, GRID_HEIGHT - 1), (GRID_WIDTH//2 + 1, GRID_HEIGHT - 1)]
 TIMER = 1000
 LOOP_KEY = USEREVENT+2
 LOOP_SHIFT = USEREVENT+1
@@ -311,13 +195,9 @@ pause_start = None
 end_time = None
 
 # setup
-pygame.display.init()
-pygame.font.init()
-window = pygame.display.set_mode((RES_X, RES_Y))
-pygame.display.set_caption("Moving labyrinth")
-font = pygame.font.Font(pygame.font.get_default_font(), 32)
 pygame.time.set_timer(LOOP_SHIFT, TIMER)  # loop for shift
 maze = initialize_maze()
+draw = view.View(GRID_WIDTH, GRID_HEIGHT)
 
 # program
 close_game = False
@@ -342,7 +222,8 @@ while not close_game:
         if event.type == pygame.QUIT:
             close_game = True
 
-        draw_game(current_level)
+        draw.game(current_level, maze, pos_x, pos_y,
+                         paused, paused_time, level_end, end_time)
 
         if is_end_game(pos_x, pos_y):
             if not level_end:
@@ -351,7 +232,7 @@ while not close_game:
                 paused = True
                 pygame.time.set_timer(LOOP_SHIFT, 0)
                 save_score(end_time)
-            draw_end()
+            draw.end(current_level)
 
         pygame.display.update()
 quit()
