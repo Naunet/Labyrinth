@@ -2,7 +2,6 @@ import pygame
 
 
 class View:
-
     def __init__(self, width, height):
         # values
         self.GRID_WIDTH = width
@@ -23,17 +22,20 @@ class View:
         pygame.display.set_caption("Moving labyrinth")
         self.font = pygame.font.Font(pygame.font.get_default_font(), 32)
 
+
     def _top_corner(self, x, y):
         """coordinates to pixels"""
         x = self.SIZE*x+self.BORDER_X
         y = self.SIZE*y+self.BORDER_Y
         return (x, y)
 
+
     def background(self, color, level):
         self.window.fill(color)
         self.word("Level "+str(level),
                        (self.RES_X//2, self.HEADER//2),
                        pygame.Color('black'))
+
 
     def clock(self, paused, paused_time, is_level_end, end_time):
         text = self.font.render("Pause", True, (0, 0, 0), (255, 255, 255))
@@ -50,15 +52,18 @@ class View:
         textRect.topright = (self.RES_X-offset, offset)
         self.window.blit(text, textRect)
 
+
     def rectangle(self, topCorner, width, height, color):
         Rect = pygame.Rect(topCorner[0], topCorner[1], width, height)
         pygame.draw.rect(self.window, color, Rect)
+
 
     def maze(self, maze, size, color):
         for j in range(self.GRID_HEIGHT):
             for i in range(self.GRID_WIDTH):
                 if maze[j][i]:
                     self.rectangle(self._top_corner(i, j), 25, 25, color)
+
 
     def char(self, x, y):
         # To be improved
@@ -69,12 +74,16 @@ class View:
         self.rectangle((x, y), self.SIZE*scale,
                             self.SIZE*scale, (0, 0, 0, 255))
 
-    def game(self, level, maze, pos_x, pos_y, paused, paused_time, is_level_end, end_time):
+
+    def header(self, level, paused, paused_time, is_level_end, end_time):
         self.background(self.C_PATH, level)
         self.clock(paused, paused_time, is_level_end, end_time)
 
+
+    def game(self, maze, pos_x, pos_y):
         self.maze(maze, self.SIZE, self.C_WALL)
         self.char(pos_x, pos_y)
+
 
     def word(self, text, pos, color, background=None):
         word_surface = self.font.render(text, True, color, background)
@@ -82,6 +91,7 @@ class View:
         rect.center = pos
         self.window.blit(word_surface, rect)
         return rect.width, rect.height
+
 
     def text(self, surface, height, text):
         words = [word.split(' ') for word in text.splitlines()]
@@ -113,7 +123,8 @@ class View:
                                     pygame.Color('black'), pygame.Color('white'))
             height += tmp//2
 
-    def end(self, current_level):
+
+    def end(self, current_level, end_time):
         # read highscores
         scorefile = open('highscores.txt', 'r+')
         scorelist = scorefile.readlines()
@@ -125,5 +136,8 @@ class View:
             if level == str(current_level):
                 highscore = int(time)//1000
         # display highscore
-        self.text(self.window, self.RES_Y//3,
-                       "Level Complete!\nHighscore: \n{0:02}:{1:02}s".format(highscore//60, highscore % 60))
+        string = "Level Complete!\n"
+        if end_time//1000 <= highscore:
+            string += "New "
+        string += "Highscore:\n{0:02}:{1:02}s".format(highscore//60, highscore % 60)
+        self.text(self.window, self.RES_Y//3, string)
