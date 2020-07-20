@@ -1,21 +1,22 @@
+https://scipython.com/blog/making-a-maze/
+https://stackoverflow.com/questions/25355603/python-signals-and-slots-between-classes
+
+
 1. Make window responsive, resizeable
 #define variables eg. a=screen.height//24, the remainder will be the border
+https://stackoverflow.com/questions/34910086/pygame-how-do-i-resize-a-surface-and-keep-all-objects-within-proportionate-to-t
 
 2. Add transitional movement
 
 3. Improve graphics (shaded walls, character design)
 
-4. Create welcome page
-
-5. Show high scores
-
-6. Create levels : variable grid size, variable shift speed, variable ratio wall/path
+4. Create levels : variable grid size, variable shift speed, variable ratio wall/path
 Change maze colour per level
 
-7. Create level select page
+5. Create level select page
 
-8. Add music and sound effects
+6. Add music and sound effects
 
-9. Make available for computer
+7. Make available for computer
 
-10. Make available for mobile
+8. Make available for mobile
