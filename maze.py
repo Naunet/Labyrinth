@@ -2,10 +2,11 @@
 import pygame
 from pygame.constants import *
 import time
+from enum import Enum
 # local
 import view
 import wall
-
+import score
 
 def handle_interaction(key):
     """records player's interaction"""
@@ -44,33 +45,6 @@ def pause_game(old, change):
     return old
 
 
-def save_score(current_time):  # in ms
-    # read previous scores
-    scorefile = open('highscores.txt', 'r+')
-    scorelist = scorefile.readlines()
-    scorefile.close()
-    # check if level already in scores
-    exists = None
-    previous = None
-    for score in scorelist:
-        level, time = score.split(': ')
-        if level == str(current_level):
-            exists = score
-            previous = int(time)
-    # compare times and update
-    if exists:
-        if previous > end_time:
-            i = scorelist.index(exists)
-            scorelist.remove(exists)
-            scorelist.insert(i, "{}: {}\n".format(current_level, current_time))
-    else:
-        scorelist.append("{}: {}\n".format(current_level, current_time))
-    # write new scores
-    scorefile = open('highscores.txt', 'w+')
-    scorefile.writelines(scorelist)
-    scorefile.close()
-
-
 def run():
     global close_game, paused, level_end, end_time
     if event.type == LOOP_SHIFT:
@@ -98,7 +72,7 @@ def run():
             level_end = True
             paused = True
             pygame.time.set_timer(LOOP_SHIFT, 0)
-            save_score(end_time)
+            score.save(current_level, end_time)
         draw.end(current_level, end_time)
 
 
@@ -108,7 +82,7 @@ GRID_HEIGHT = 22
 if GRID_WIDTH < 5 or GRID_HEIGHT < 5:
     raise Exception("Maze dimensions too small! \
         ({}, {})".format(GRID_WIDTH, GRID_HEIGHT))
-TIMER = 400 #1000
+TIMER = 1000
 LOOP_KEY = USEREVENT+2
 LOOP_SHIFT = USEREVENT+1
 
@@ -127,11 +101,14 @@ draw = view.View(GRID_WIDTH, GRID_HEIGHT)
 maze = wall.Wall(draw, GRID_WIDTH, GRID_HEIGHT)
 
 # screen flag
-menu = True
-settings = False
-levels = False
-game = False
-sandbox = False
+class Screen(Enum):
+    MENU = 1
+    SETTINGS = 2
+    LEVELS = 3
+    GAME = 4
+    SANDBOX = 5
+
+screen = Screen.MENU
 
 # program
 close_game = False
@@ -139,7 +116,7 @@ while not close_game:
     for event in [pygame.event.wait()] + pygame.event.get():
         if event.type == pygame.QUIT:
             close_game = True
-        if menu:
+        if screen == Screen.MENU:
             boxes = draw.menu()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()
@@ -147,19 +124,15 @@ while not close_game:
                 print(clicked)
                 if clicked:
                     if clicked[0]==0:
-                        menu = False
-                        #levels = True
-                        game = True
+                        screen = Screen.GAME #LEVELS
                     if clicked[0]==1:
-                        menu = False
-                        sandbox = True
+                        screen = Screen.SANDBOX
                     if clicked[0]==2:
-                        menu = False
-                        settings = True
+                        screen = Screen.SETTINGS
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_q or event.key == pygame.K_ESCAPE:
                     close_game = True
-        if game:
+        if screen == Screen.GAME:
             run()
         pygame.display.update()
 quit()

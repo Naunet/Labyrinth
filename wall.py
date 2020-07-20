@@ -2,23 +2,28 @@ from random import random, randrange
 
 IS_WALL = True
 
+
 class Wall:
-    def __init__(self, view, width, height):
-        self.WALL_RATE = 0.45
-        self.GRID_WIDTH = width
-        self.GRID_HEIGHT = height
-        self.EXITS = [(self.GRID_WIDTH//2, 0), (self.GRID_WIDTH//2 + 1, 0),
-                      (self.GRID_WIDTH - 1, self.GRID_HEIGHT//2), (self.GRID_WIDTH - 1, self.GRID_HEIGHT//2 + 1),
-                      (0, self.GRID_HEIGHT//2), (0, self.GRID_HEIGHT//2 + 1),
-                      (self.GRID_WIDTH//2, self.GRID_HEIGHT - 1), (self.GRID_WIDTH//2 + 1, self.GRID_HEIGHT - 1)]
-        self.START_X = self.GRID_WIDTH//2  # centre cleared by def
-        self.START_Y = self.GRID_HEIGHT//2  # centre cleared by def
+    def __init__(self, view, width, height, exits=None, wallrate=0.45):
+        self.WALL_RATE = wallrate
+        self.WIDTH = width
+        self.HEIGHT = height
+        self.EXITS = exits
+        if not self.EXITS:
+            self.EXITS = [(self.WIDTH//2, 0), (self.WIDTH//2 + 1, 0),
+                        (self.WIDTH - 1, self.HEIGHT//2),
+                        (self.WIDTH - 1, self.HEIGHT//2 + 1),
+                        (0, self.HEIGHT//2), (0, self.HEIGHT//2 + 1),
+                        (self.WIDTH//2, self.HEIGHT - 1),
+                        (self.WIDTH//2 + 1, self.HEIGHT - 1)]
+        self.START_X = self.WIDTH//2  # centre cleared by def
+        self.START_Y = self.HEIGHT//2  # centre cleared by def
         self.pos_x = self.START_X
         self.pos_y = self.START_Y
         self.view = view
-        self.maze = [[IS_WALL]*self.GRID_WIDTH for i in range(self.GRID_HEIGHT)]
-        for i in range(1, self.GRID_WIDTH-1):
-            for j in range(1, self.GRID_HEIGHT-1):
+        self.maze = [[IS_WALL]*self.WIDTH for i in range(self.HEIGHT)]
+        for i in range(1, self.WIDTH-1):
+            for j in range(1, self.HEIGHT-1):
                 self.maze[j][i] = (random() < self.WALL_RATE)
         # clear exits
         for x, y in self.EXITS:
@@ -26,14 +31,13 @@ class Wall:
         # clear start
         self.maze[self.START_Y][self.START_X] = not IS_WALL
 
-
     def handle_shift(self):
         """from anywhere in any direction"""
         # chose orientation
         columns = (random() < 0.5)  # lines or columns
-        uplim = self.GRID_WIDTH-1
+        uplim = self.WIDTH-1
         if not columns:
-            uplim = self.GRID_HEIGHT-1
+            uplim = self.HEIGHT-1
 
         # values
         start = 1
@@ -57,18 +61,18 @@ class Wall:
         """shift"""
         for i in range(start, stop, positives):
             if columns:
-                for y in range(1, self.GRID_HEIGHT-1):
+                for y in range(1, self.HEIGHT-1):
                     self.maze[y][i] = self.maze[y][i+positives]
             else:
-                for x in range(1, self.GRID_WIDTH-1):
+                for x in range(1, self.WIDTH-1):
                     self.maze[i][x] = self.maze[i+positives][x]
 
         """create new walls"""
         if columns:
-            for y in range(1, self.GRID_HEIGHT-1):
+            for y in range(1, self.HEIGHT-1):
                 self.maze[y][stop] = (random() < self.WALL_RATE)
         else:
-            for x in range(1, self.GRID_WIDTH-1):
+            for x in range(1, self.WIDTH-1):
                 self.maze[stop][x] = (random() < self.WALL_RATE)
 
         """clear center"""
@@ -89,26 +93,23 @@ class Wall:
                 else:
                     self.pos_y -= positives
 
-
     def move(self, anim, paused):
         if not anim['move'] or paused:
             return (self.pos_x, self.pos_y)
-        if anim['right'] and self.pos_x < self.GRID_WIDTH-1 and not(self.maze[self.pos_y][self.pos_x+1]):
+        if anim['right'] and self.pos_x < self.WIDTH-1 and not(self.maze[self.pos_y][self.pos_x+1]):
             self.pos_x += 1
         if anim['left'] and self.pos_x > 0 and not(self.maze[self.pos_y][self.pos_x-1]):
             self.pos_x -= 1
         if anim['up'] and self.pos_y > 0 and not(self.maze[self.pos_y-1][self.pos_x]):
             self.pos_y -= 1
-        if anim['down'] and self.pos_y < self.GRID_HEIGHT-1 and not(self.maze[self.pos_y+1][self.pos_x]):
+        if anim['down'] and self.pos_y < self.HEIGHT-1 and not(self.maze[self.pos_y+1][self.pos_x]):
             self.pos_y += 1
         return (self.pos_x, self.pos_y)
 
-    
     def is_end_game(self):
         if (self.pos_x, self.pos_y) in self.EXITS:
             return True
         return False
-
 
     def draw(self):
         self.view.game(self.maze, self.pos_x, self.pos_y)
