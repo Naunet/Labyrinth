@@ -23,4 +23,3 @@ def save(current_level, current_time):  # in ms
     scorefile = open('highscores.txt', 'w+')
     scorefile.writelines(scorelist)
     scorefile.close()
-

@@ -1,6 +1,7 @@
 import pygame
 from os import path
 
+
 class View:
     def __init__(self, width, height):
         # values
@@ -21,8 +22,10 @@ class View:
         self.window = pygame.display.set_mode((self.RES_X, self.RES_Y))
         pygame.display.set_caption("Moving labyrinth")
         self.fonts = dict()
-        self.fonts['standard'] = pygame.font.Font(pygame.font.get_default_font(), 32)
-        self.fonts['large'] = pygame.font.Font(pygame.font.get_default_font(), 54)
+        self.fonts['standard'] = pygame.font.Font(
+            pygame.font.get_default_font(), 32)
+        self.fonts['large'] = pygame.font.Font(
+            pygame.font.get_default_font(), 54)
         self.images = dict()
         self.load()
 
@@ -38,15 +41,18 @@ class View:
                   (self.RES_X//2, self.HEADER//2))
 
     def clock(self, paused, paused_time, is_level_end, end_time):
-        text = self.fonts['standard'].render("Pause", True, (0, 0, 0), (255, 255, 255))
+        text = self.fonts['standard'].render(
+            "Pause", True, (0, 0, 0), (255, 255, 255))
         if is_level_end:
             time = end_time//1000
             string = "{0:02}:{1:02}".format(time//60, time % 60)
-            text = self.fonts['standard'].render(string, True, (255, 0, 0), (255, 255, 255))
+            text = self.fonts['standard'].render(
+                string, True, (255, 0, 0), (255, 255, 255))
         if not paused:
             time = (pygame.time.get_ticks() - paused_time)//1000  # in seconds
             string = "{0:02}:{1:02}".format(time//60, time % 60)
-            text = self.fonts['standard'].render(string, True, (0, 0, 0), (255, 255, 255))
+            text = self.fonts['standard'].render(
+                string, True, (0, 0, 0), (255, 255, 255))
         textRect = text.get_rect()
         offset = (self.HEADER-textRect.height)//2
         textRect.topright = (self.RES_X-offset, offset)
@@ -99,7 +105,8 @@ class View:
             line = ""
             size = 0
             word = words[0].pop(0)
-            text = self.fonts['standard'].render(word, True, (0, 0, 0), (255, 255, 255))
+            text = self.fonts['standard'].render(
+                word, True, (0, 0, 0), (255, 255, 255))
             width, tmp = text.get_size()
             middle = tmp
             while size + space + width < max_width:
@@ -108,7 +115,8 @@ class View:
                 if not words[0]:
                     break
                 word = words[0].pop()
-                text = self.fonts['standard'].render(word, True, (0, 0, 0), (255, 255, 255))
+                text = self.fonts['standard'].render(
+                    word, True, (0, 0, 0), (255, 255, 255))
                 width, tmp = text.get_size()
                 if tmp < middle:
                     tmp = middle
@@ -139,14 +147,16 @@ class View:
     def load(self):
         # main menu
         background = pygame.image.load(path.join('img', 'tree.png'))
-        #80 = header + fraction of vine
-        scale = min(self.RES_X/background.get_width(), (self.RES_Y-80)/background.get_height())
-        background = pygame.transform.scale(background, 
-            (int(background.get_width()*scale), int(background.get_height()*scale)))
+        # 80 = header + fraction of vine
+        scale = min(self.RES_X/background.get_width(),
+                    (self.RES_Y-80)/background.get_height())
+        background = pygame.transform.scale(background,
+                                            (int(background.get_width()*scale), int(background.get_height()*scale)))
         self.images['background'] = background
         vine = pygame.image.load(path.join('img', '2.png'))
         factor = self.RES_X/vine.get_width()
-        vine = pygame.transform.scale(vine, (self.RES_X, int(vine.get_height()*factor)))
+        vine = pygame.transform.scale(
+            vine, (self.RES_X, int(vine.get_height()*factor)))
         self.images['vine'] = vine
 
     def buttons(self, values, pos, background, color=pygame.Color('black')):
@@ -161,21 +171,21 @@ class View:
         boxes = list()
         x, y = pos
         for text in values:
-            box = self.rectangle((left,y-height//2), size, height, background)
-            boxes.append(box) #(left,left+size,y-height//2,y+height//2)
+            box = self.rectangle((left, y-height//2), size, height, background)
+            boxes.append(box)  # (left,left+size,y-height//2,y+height//2)
             self.word(text, (x, y),
                       color)
             y += 80
-        return boxes #(x1, x2, y1, y2)
+        return boxes  # (x1, x2, y1, y2)
 
     def menu(self):
-        self.window.fill((255,231,122)) #(153, 221, 255)
+        self.window.fill((255, 231, 122))  # (153, 221, 255)
         rect = self.images['background'].get_rect()
-        rect.center = (self.RES_X//2,self.RES_Y//2+80//2)
+        rect.center = (self.RES_X//2, self.RES_Y//2+80//2)
         self.window.blit(self.images['background'], rect)
-        self.window.blit(self.images['vine'], (0,20))
+        self.window.blit(self.images['vine'], (0, 20))
         self.word("Labyrinth", (self.RES_X//2, 70), font='large')
-        C_LEAF = (111,133,97) # (44,95,45)
+        C_LEAF = (111, 133, 97)  # (44,95,45)
         boxes = self.buttons(["Level select", "Sandbox", "Settings"],
-                     (self.RES_X//2, 180), C_LEAF)
+                             (self.RES_X//2, 180), C_LEAF)
         return boxes

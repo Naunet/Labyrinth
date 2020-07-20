@@ -11,11 +11,11 @@ class Wall:
         self.EXITS = exits
         if not self.EXITS:
             self.EXITS = [(self.WIDTH//2, 0), (self.WIDTH//2 + 1, 0),
-                        (self.WIDTH - 1, self.HEIGHT//2),
-                        (self.WIDTH - 1, self.HEIGHT//2 + 1),
-                        (0, self.HEIGHT//2), (0, self.HEIGHT//2 + 1),
-                        (self.WIDTH//2, self.HEIGHT - 1),
-                        (self.WIDTH//2 + 1, self.HEIGHT - 1)]
+                          (self.WIDTH - 1, self.HEIGHT//2),
+                          (self.WIDTH - 1, self.HEIGHT//2 + 1),
+                          (0, self.HEIGHT//2), (0, self.HEIGHT//2 + 1),
+                          (self.WIDTH//2, self.HEIGHT - 1),
+                          (self.WIDTH//2 + 1, self.HEIGHT - 1)]
         self.START_X = self.WIDTH//2  # centre cleared by def
         self.START_Y = self.HEIGHT//2  # centre cleared by def
         self.pos_x = self.START_X

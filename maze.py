@@ -8,6 +8,7 @@ import view
 import wall
 import score
 
+
 def handle_interaction(key):
     """records player's interaction"""
     anim = {'move': False, 'right': False, 'left': False,
@@ -101,12 +102,15 @@ draw = view.View(GRID_WIDTH, GRID_HEIGHT)
 maze = wall.Wall(draw, GRID_WIDTH, GRID_HEIGHT)
 
 # screen flag
+
+
 class Screen(Enum):
     MENU = 1
     SETTINGS = 2
     LEVELS = 3
     GAME = 4
     SANDBOX = 5
+
 
 screen = Screen.MENU
 
@@ -120,14 +124,15 @@ while not close_game:
             boxes = draw.menu()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()
-                clicked = [index for index, b in enumerate(boxes) if b.collidepoint(pos)]
+                clicked = [index for index,
+                           b in enumerate(boxes) if b.collidepoint(pos)]
                 print(clicked)
                 if clicked:
-                    if clicked[0]==0:
-                        screen = Screen.GAME #LEVELS
-                    if clicked[0]==1:
+                    if clicked[0] == 0:
+                        screen = Screen.GAME  # LEVELS
+                    if clicked[0] == 1:
                         screen = Screen.SANDBOX
-                    if clicked[0]==2:
+                    if clicked[0] == 2:
                         screen = Screen.SETTINGS
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_q or event.key == pygame.K_ESCAPE:
