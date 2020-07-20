@@ -19,11 +19,14 @@ class Screen(Enum):
 
 class Game():
     def __init__(self):
-        # define macro variables
         self.LOOP_SHIFT = USEREVENT+1
         self.LOOP_KEY = USEREVENT+2
 
-        # define variables
+        self.initialize()
+        self.setup()
+        self.run()
+
+    def initialize(self):
         self.key_flags = list()
         self.current_level = 1
         self.width = 20
@@ -38,14 +41,12 @@ class Game():
         self.pause_start = None
         self.end_time = None
 
-        # setup
+    def setup(self):
         pygame.time.set_timer(self.LOOP_SHIFT, self.timer)  # loop for shift
         self.draw = view.View(self.width, self.height)
         self.maze = wall.Wall(self.draw, self.width, self.height)
         self.screen = Screen.MENU
         self.close_game = False
-
-        self.run()
 
     def run(self):
         while not self.close_game:
@@ -106,6 +107,11 @@ class Game():
                 pygame.time.set_timer(self.LOOP_SHIFT, 0)
                 score.save(self.current_level, self.end_time)
             self.draw.end(self.current_level, self.end_time)
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    self.initialize()
+                    self.setup()
 
     def handle_interaction(self, key):
         """records player's interaction"""
