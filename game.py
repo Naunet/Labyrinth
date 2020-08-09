@@ -21,10 +21,9 @@ class Game():
     def __init__(self):
         self.LOOP_SHIFT = USEREVENT+1
         self.LOOP_KEY = USEREVENT+2
+        self.LOOP_CLOCK = USEREVENT+3
 
         self.screen = Screen.MENU
-
-        self.initialize()
         self.setup()
         self.run()
 
@@ -33,20 +32,23 @@ class Game():
         self.current_level = 1
         self.width = 20
         self.height = 22
+        self.draw.set_dimensions(self.width, self.height)
+        self.maze = wall.Wall(self.draw, self.width, self.height)
         if self.width < 5 or self.height < 5:
             raise Exception("Maze dimensions too small! \
                 ({}, {})".format(self.width, self.height))
         self.timer = 1000
+        pygame.time.set_timer(self.LOOP_SHIFT, self.timer)  # loop for shift
         self.level_end = False
         self.paused = False
         self.paused_time = 0
         self.pause_start = None
+        self.start_time = pygame.time.get_ticks()
         self.end_time = None
+        pygame.time.set_timer(self.LOOP_CLOCK, 500)  # update clock
 
     def setup(self):
-        pygame.time.set_timer(self.LOOP_SHIFT, self.timer)  # loop for shift
-        self.draw = view.View(self.width, self.height)
-        self.maze = wall.Wall(self.draw, self.width, self.height)
+        self.draw = view.View()
         self.close_game = False
 
     def run(self):
@@ -72,7 +74,6 @@ class Game():
             pos = pygame.mouse.get_pos()
             clicked = [index for index,
                        b in enumerate(boxes) if b.collidepoint(pos)]
-            print(clicked)
             if clicked:
                 if clicked[0] == 0:
                     self.screen = Screen.LEVELS
@@ -88,8 +89,10 @@ class Game():
             clicked = [index for index,
                        b in enumerate(boxes) if b.collidepoint(pos)]
             print(clicked)
+            self.current_level = clicked[0]+1
             if clicked:
                 self.screen = Screen.GAME
+                self.initialize()
 
     def play(self, event):
         if event.type == self.LOOP_SHIFT:
@@ -109,12 +112,13 @@ class Game():
                 pygame.time.set_timer(self.LOOP_KEY, 0)
 
         self.draw.header(self.current_level, self.paused,
-                         self.paused_time, self.level_end, self.end_time)
+                         self.start_time + self.paused_time, 
+                         self.level_end, self.end_time)
         self.maze.draw()
 
         if self.maze.is_end_game():
             if not self.level_end:
-                self.end_time = pygame.time.get_ticks()-self.paused_time
+                self.end_time = pygame.time.get_ticks()-self.paused_time-self.start_time
                 self.level_end = True
                 self.paused = True
                 pygame.time.set_timer(self.LOOP_SHIFT, 0)

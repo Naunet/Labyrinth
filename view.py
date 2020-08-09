@@ -3,17 +3,16 @@ from os import path
 
 
 class View:
-    def __init__(self, width, height):
+    def __init__(self):
         # values
-        self.GRID_WIDTH = width
-        self.GRID_HEIGHT = height
+        self.GRID_WIDTH = None
+        self.GRID_HEIGHT = None
+        self.SIZE = None
         self.RES_X = 510  # swap to dynamic
         self.RES_Y = 610  # swap to dynamic
         self.HEADER = 50
-        self.SIZE = min(self.RES_X//width, (self.RES_Y-self.HEADER)//height)
-        self.BORDER_X = (self.RES_X-self.SIZE*width)//2
-        self.BORDER_Y = self.HEADER + \
-            (self.RES_Y-self.SIZE*height-self.HEADER)//2
+        self.BORDER_X = None
+        self.BORDER_Y = None
         self.C_WALL = (0, 153, 0, 255)
         self.C_PATH = (250, 210, 140, 255)
         # functions
@@ -29,6 +28,14 @@ class View:
         self.images = dict()
         self.load()
 
+    def set_dimensions(self, width, height):
+        self.GRID_WIDTH = width
+        self.GRID_HEIGHT = height
+        self.SIZE = min(self.RES_X//width, (self.RES_Y-self.HEADER)//height)
+        self.BORDER_X = (self.RES_X-self.SIZE*width)//2
+        self.BORDER_Y = self.HEADER + \
+            (self.RES_Y-self.SIZE*height-self.HEADER)//2
+
     def _top_corner(self, x, y):
         """coordinates to pixels"""
         x = self.SIZE*x+self.BORDER_X
@@ -40,7 +47,7 @@ class View:
         self.word("Level "+str(level),
                   (self.RES_X//2, self.HEADER//2))
 
-    def clock(self, paused, paused_time, is_level_end, end_time):
+    def clock(self, paused, dead_time, is_level_end, end_time):
         text = self.fonts['standard'].render(
             "Pause", True, (0, 0, 0), (255, 255, 255))
         if is_level_end:
@@ -49,7 +56,9 @@ class View:
             text = self.fonts['standard'].render(
                 string, True, (255, 0, 0), (255, 255, 255))
         if not paused:
-            time = (pygame.time.get_ticks() - paused_time)//1000  # in seconds
+            print("time ", (pygame.time.get_ticks() - dead_time)/1000)
+            time = (pygame.time.get_ticks() - dead_time)//1000  # in seconds
+            print("s ", time)
             string = "{0:02}:{1:02}".format(time//60, time % 60)
             text = self.fonts['standard'].render(
                 string, True, (0, 0, 0), (255, 255, 255))
@@ -114,7 +123,7 @@ class View:
                 size += space + width
                 if not words[0]:
                     break
-                word = words[0].pop()
+                word = words[0].pop(0)
                 text = self.fonts['standard'].render(
                     word, True, (0, 0, 0), (255, 255, 255))
                 width, tmp = text.get_size()
@@ -143,6 +152,9 @@ class View:
         string += "Highscore:\n{0:02}:{1:02}s".format(
             highscore//60, highscore % 60)
         self.text(self.window, self.RES_Y//3, string)
+        # display instructions
+        string = "Click anywhere to continue"
+        self.text(self.window, 2*self.RES_Y//3, string)
 
     def load(self):
         background = pygame.image.load(path.join('img', 'tree.png'))
@@ -160,17 +172,17 @@ class View:
 
     def buttons(self, values, pos, background, color=pygame.Color('black')):
         # find variables
-        size, height = self.fonts['standard'].size(values[0])
+        width, height = self.fonts['standard'].size(values[0])
         for text in values:
-            size = max(size, self.fonts['standard'].size(text)[0])
-        size += 30
+            width = max(width, self.fonts['standard'].size(text)[0])
+        width += 30
         height += 20
-        left = (self.RES_X-size)//2
+        x, y = pos
+        left = x-width//2
         # draw buttons
         boxes = list()
-        x, y = pos
         for text in values:
-            box = self.rectangle((left, y-height//2), size, height, background)
+            box = self.rectangle((left, y-height//2), width, height, background)
             boxes.append(box)  # (left,left+size,y-height//2,y+height//2)
             self.word(text, (x, y),
                       color)
@@ -198,5 +210,7 @@ class View:
         self.word("Level Select", (self.RES_X//2, 70), font='large')
         C_LEAF = (111, 133, 97)  # (44,95,45)
         boxes = self.buttons(["Level 1", "Level 2", "Level 3", "Level 4", "Level 5"],
-                             (self.RES_X//2, 180), C_LEAF)
+                             (self.RES_X//4, 180), C_LEAF)
+        boxes += self.buttons(["Level 6", "Level 7", "Level 8", "Level 9", "Level 10"],
+                             (3*self.RES_X//4, 180), C_LEAF)
         return boxes
