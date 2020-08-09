@@ -145,7 +145,6 @@ class View:
         self.text(self.window, self.RES_Y//3, string)
 
     def load(self):
-        # main menu
         background = pygame.image.load(path.join('img', 'tree.png'))
         # 80 = header + fraction of vine
         scale = min(self.RES_X/background.get_width(),
@@ -187,5 +186,17 @@ class View:
         self.word("Labyrinth", (self.RES_X//2, 70), font='large')
         C_LEAF = (111, 133, 97)  # (44,95,45)
         boxes = self.buttons(["Level select", "Sandbox", "Settings"],
+                             (self.RES_X//2, 180), C_LEAF)
+        return boxes
+
+    def levels(self):
+        self.window.fill((255, 231, 122))  # (153, 221, 255)
+        rect = self.images['background'].get_rect()
+        rect.center = (self.RES_X//2, self.RES_Y//2+80//2)
+        self.window.blit(self.images['background'], rect)
+        self.window.blit(self.images['vine'], (0, 20))
+        self.word("Level Select", (self.RES_X//2, 70), font='large')
+        C_LEAF = (111, 133, 97)  # (44,95,45)
+        boxes = self.buttons(["Level 1", "Level 2", "Level 3", "Level 4", "Level 5"],
                              (self.RES_X//2, 180), C_LEAF)
         return boxes
