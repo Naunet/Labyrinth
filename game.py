@@ -56,14 +56,17 @@ class Game():
             for event in [pygame.event.wait()] + pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.close_game = True     
-                if event.type == pygame.KEYDOWN:
+                elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_q or event.key == pygame.K_ESCAPE:
                         self.close_game = True
+                elif event.type == pygame.VIDEORESIZE:
+                    self.draw.resize(*event.dict['size'])
+                
                 if self.screen == Screen.GAME:
                     self.play(event)
-                if self.screen == Screen.LEVELS:
+                elif self.screen == Screen.LEVELS:
                     self.level_select(event)
-                if self.screen == Screen.MENU:
+                elif self.screen == Screen.MENU:
                     self.menu_select(event)
                 pygame.display.update()
         quit()
@@ -89,15 +92,23 @@ class Game():
             clicked = [index for index,
                        b in enumerate(boxes) if b.collidepoint(pos)]
             print(clicked)
-            self.current_level = clicked[0]+1
             if clicked:
-                self.screen = Screen.GAME
-                self.initialize()
+                if clicked[0]==0:
+                    self.screen = Screen.MENU
+                else:
+                    self.screen = Screen.GAME
+                    self.initialize()
+                    self.current_level = clicked[0]
 
     def play(self, event):
+        back = self.draw.header(self.current_level, self.paused,
+                         self.start_time + self.paused_time, 
+                         self.level_end, self.end_time)
+        self.maze.draw()
+
         if event.type == self.LOOP_SHIFT:
             self.maze.handle_shift()
-        if event.type == pygame.KEYDOWN:
+        elif event.type == pygame.KEYDOWN:
             self.key_flags.append(event.key)
             pygame.time.set_timer(self.LOOP_KEY, 200)  # hold down loop
         if event.type == pygame.KEYDOWN or event.type == self.LOOP_KEY:
@@ -106,15 +117,14 @@ class Game():
                 self.close_game = anim['quit']
                 self.paused = self.pause_game(self.paused, anim['pause'])
                 self.maze.move(anim, self.paused)
-        if event.type == pygame.KEYUP:
+        elif event.type == pygame.KEYUP:
             self.key_flags.remove(event.key)
             if not self.key_flags:
                 pygame.time.set_timer(self.LOOP_KEY, 0)
-
-        self.draw.header(self.current_level, self.paused,
-                         self.start_time + self.paused_time, 
-                         self.level_end, self.end_time)
-        self.maze.draw()
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            pos = pygame.mouse.get_pos()
+            if back.collidepoint(pos):
+                self.screen = Screen.LEVELS
 
         if self.maze.is_end_game():
             if not self.level_end:
@@ -125,8 +135,13 @@ class Game():
                 score.save(self.current_level, self.end_time)
             self.draw.end(self.current_level, self.end_time)
             
-            # click anywhere to continue
+            next = False
+            if event.type == pygame.KEYUP:
+                if event.key in [pygame.K_RETURN, pygame.K_SPACE]:
+                    next = True
             if event.type == pygame.MOUSEBUTTONUP:
+                next = True
+            if next:
                 self.initialize()
                 self.setup()
                 self.screen = Screen.LEVELS
