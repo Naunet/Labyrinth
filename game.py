@@ -9,6 +9,8 @@ import wall
 import score
 
 # screen flag
+
+
 class Screen(Enum):
     MENU = 1
     SETTINGS = 2
@@ -27,17 +29,16 @@ class Game():
         self.setup()
         self.run()
 
-    def initialize(self):
+    def initialize(self, level=1, size=(20, 22), shift_time=1000):
         self.key_flags = list()
-        self.current_level = 1
-        self.width = 20
-        self.height = 22
+        self.current_level = level
+        self.width, self.height = size
         self.draw.set_dimensions(self.width, self.height)
-        self.maze = wall.Wall(self.draw, self.width, self.height)
         if self.width < 5 or self.height < 5:
             raise Exception("Maze dimensions too small! \
                 ({}, {})".format(self.width, self.height))
-        self.timer = 1000
+        self.maze = wall.Wall(self.draw, self.width, self.height)
+        self.timer = shift_time
         pygame.time.set_timer(self.LOOP_SHIFT, self.timer)  # loop for shift
         self.level_end = False
         self.paused = False
@@ -48,6 +49,7 @@ class Game():
         pygame.time.set_timer(self.LOOP_CLOCK, 500)  # update clock
 
     def setup(self):
+        self.read_levels()
         self.draw = view.View()
         self.close_game = False
 
@@ -55,13 +57,13 @@ class Game():
         while not self.close_game:
             for event in [pygame.event.wait()] + pygame.event.get():
                 if event.type == pygame.QUIT:
-                    self.close_game = True     
+                    self.close_game = True
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_q or event.key == pygame.K_ESCAPE:
                         self.close_game = True
                 elif event.type == pygame.VIDEORESIZE:
                     self.draw.resize(*event.dict['size'])
-                
+
                 if self.screen == Screen.GAME:
                     self.play(event)
                 elif self.screen == Screen.LEVELS:
@@ -91,19 +93,50 @@ class Game():
             pos = pygame.mouse.get_pos()
             clicked = [index for index,
                        b in enumerate(boxes) if b.collidepoint(pos)]
-            print(clicked)
             if clicked:
-                if clicked[0]==0:
+                if clicked[0] == 0:
                     self.screen = Screen.MENU
                 else:
+                    self.setup_level(clicked[0])
                     self.screen = Screen.GAME
-                    self.initialize()
-                    self.current_level = clicked[0]
+
+    def setup_level(self, level):
+        params = self.levels.get(level)
+        if not params:
+            self.initialize(level=level)
+        else:
+            self.initialize(level=level, size=(
+                params['width'], params['height']), shift_time=params['timer'])
+            # , wallrate=params.get('wallrate'), exits=params.get('exits')
+
+    def read_levels(self):
+        # read levels
+        levelfile = open('levels.txt', 'r+')
+        lines = levelfile.readlines()
+        levelfile.close()
+        # creat dictionary
+        self.levels = dict()
+        while lines:
+            while lines[0] == '\n':
+                lines.pop(0)
+            number = int(lines.pop(0))
+            timer = int(lines.pop(0))
+            width = int(lines.pop(0))
+            height = int(lines.pop(0))
+            level = dict(timer=timer, width=width, height=height)
+            tmp = lines.pop(0)
+            if tmp != '\n':
+                level["wallrate"] = float(tmp)
+                tmp = lines.pop(0)
+            if tmp != '\n':
+                exits = eval(tmp)
+                level["exits"] = exits
+            self.levels[number] = level
 
     def play(self, event):
         back = self.draw.header(self.current_level, self.paused,
-                         self.start_time + self.paused_time, 
-                         self.level_end, self.end_time)
+                                self.start_time + self.paused_time,
+                                self.level_end, self.end_time)
         self.maze.draw()
 
         if event.type == self.LOOP_SHIFT:
@@ -134,7 +167,7 @@ class Game():
                 pygame.time.set_timer(self.LOOP_SHIFT, 0)
                 score.save(self.current_level, self.end_time)
             self.draw.end(self.current_level, self.end_time)
-            
+
             next = False
             if event.type == pygame.KEYUP:
                 if event.key in [pygame.K_RETURN, pygame.K_SPACE]:
@@ -142,24 +175,23 @@ class Game():
             if event.type == pygame.MOUSEBUTTONUP:
                 next = True
             if next:
-                self.initialize()
-                self.setup()
-                self.screen = Screen.LEVELS
+                self.current_level += 1
+                self.setup_level(self.current_level)
 
     def handle_interaction(self, key):
         """records player's interaction"""
         anim = {'move': False, 'right': False, 'left': False,
                 'up': False, 'down': False, 'quit': False, 'pause': False}
-        if key == pygame.K_RIGHT:
+        if key in [pygame.K_RIGHT, pygame.K_d, pygame.K_KP6]:
             anim['move'] = True
             anim['right'] = True
-        if key == pygame.K_LEFT:
+        if key in [pygame.K_LEFT, pygame.K_a, pygame.K_KP4]:
             anim['move'] = True
             anim['left'] = True
-        if key == pygame.K_UP:
+        if key in [pygame.K_UP, pygame.K_w, pygame.K_KP8]:
             anim['move'] = True
             anim['up'] = True
-        if key == pygame.K_DOWN:
+        if key in [pygame.K_DOWN, pygame.K_s, pygame.K_KP2]:
             anim['move'] = True
             anim['down'] = True
         if key == pygame.K_q or key == pygame.K_ESCAPE:

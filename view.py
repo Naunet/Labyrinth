@@ -19,7 +19,8 @@ class View:
         # functions
         pygame.display.init()
         pygame.font.init()
-        self.display = pygame.display.set_mode((self.RES_X, self.RES_Y),HWSURFACE|DOUBLEBUF|RESIZABLE)
+        self.display = pygame.display.set_mode(
+            (self.RES_X, self.RES_Y), HWSURFACE | DOUBLEBUF | RESIZABLE)
         pygame.display.set_caption("Moving labyrinth")
         self.fonts = dict()
         self.fonts['standard'] = pygame.font.Font(
@@ -36,7 +37,8 @@ class View:
 
     def _recalculate(self):
         if self.GRID_WIDTH and self.GRID_HEIGHT:
-            self.SIZE = min(self.RES_X//self.GRID_WIDTH, (self.RES_Y-self.HEADER)//self.GRID_HEIGHT)
+            self.SIZE = min(self.RES_X//self.GRID_WIDTH,
+                            (self.RES_Y-self.HEADER)//self.GRID_HEIGHT)
             self.BORDER_X = (self.RES_X-self.SIZE*self.GRID_WIDTH)//2
             self.BORDER_Y = self.HEADER + \
                 (self.RES_Y-self.SIZE*self.GRID_HEIGHT-self.HEADER)//2
@@ -44,9 +46,10 @@ class View:
     def resize(self, width, height):
         self.RES_X = max(410, width)
         self.RES_Y = max(615, height)
-        self.display = pygame.display.set_mode((self.RES_X, self.RES_Y), HWSURFACE|DOUBLEBUF|RESIZABLE)
+        self.display = pygame.display.set_mode(
+            (self.RES_X, self.RES_Y), HWSURFACE | DOUBLEBUF | RESIZABLE)
         self._recalculate()
-    
+
     def _top_corner(self, x, y):
         """coordinates to pixels"""
         x = self.SIZE*x+self.BORDER_X
@@ -58,14 +61,14 @@ class View:
         self.word("Level "+str(level),
                   (self.RES_X//2, self.HEADER//2))
         text = self.fonts['standard'].render(
-                "< Levels", True, 
+                "< Levels", True,
                 pygame.Color('white'), pygame.Color('dodgerblue'))
         textRect = text.get_rect()
         offset = (self.HEADER-textRect.height)//2
         textRect.topleft = (offset, offset)
         self.display.blit(text, textRect)
         return textRect
-        
+
     def clock(self, paused, dead_time, is_level_end, end_time):
         text = self.fonts['standard'].render(
             "Pause", True, pygame.Color('black'), pygame.Color('white'))
@@ -93,7 +96,8 @@ class View:
         for j in range(self.GRID_HEIGHT):
             for i in range(self.GRID_WIDTH):
                 if maze[j][i]:
-                    self.rectangle(self._top_corner(i, j), self.SIZE, self.SIZE, color)
+                    self.rectangle(self._top_corner(i, j),
+                                   self.SIZE, self.SIZE, color)
 
     def char(self, x, y):
         # To be improved
@@ -120,11 +124,10 @@ class View:
         self.display.blit(word_surface, rect)
         return rect
 
-    def text(self, surface, height, text, background=pygame.Color('white')):
+    def text(self, surface, height, text, color=pygame.Color('black'), background=pygame.Color('white')):
         words = [word.split(' ') for word in text.splitlines()]
         max_width, _ = surface.get_size()
         space = self.fonts['standard'].size(' ')[0]  # width of a space
-        carry = False
         while words:
             while words and not words[0]:
                 words.pop(0)
@@ -133,13 +136,13 @@ class View:
             word = words[0].pop(0)
             line = word
             text = self.fonts['standard'].render(
-                word, True, pygame.Color('black'), pygame.Color('white'))
+                word, True, color, background)
             width, middle = text.get_size()
             size = width
             while words[0]:
                 word = words[0].pop(0)
                 text = self.fonts['standard'].render(
-                    word, True, pygame.Color('black'), pygame.Color('white'))
+                    word, True, color, background)
                 width, tmp = text.get_size()
                 size += space + width
                 if size >= max_width:
@@ -150,7 +153,7 @@ class View:
                     tmp = middle
             height += middle//2
             rect = self.word(line, (max_width//2, height),
-                               background=background)
+                             color=color, background=background)
             height += rect.height//2
 
     def end(self, current_level, end_time):
@@ -166,11 +169,13 @@ class View:
                 highscore = int(time)//1000
         # display highscore
         string = "Level Complete!\n"
+        color = pygame.Color('black')
         if end_time//1000 <= highscore:
             string += "New "
+            color = pygame.Color('red')
         string += "Highscore:\n{0:02}:{1:02}s".format(
             highscore//60, highscore % 60)
-        self.text(self.display, self.RES_Y//3, string)
+        self.text(self.display, self.RES_Y//3, string, color=color)
         # display instructions
         string = "Click anywhere to continue"
         self.text(self.display, 2*self.RES_Y//3, string)
@@ -201,7 +206,8 @@ class View:
         # draw buttons
         boxes = list()
         for text in values:
-            box = self.rectangle((left, y-height//2), width, height, background)
+            box = self.rectangle((left, y-height//2),
+                                 width, height, background)
             boxes.append(box)  # (left,left+size,y-height//2,y+height//2)
             self.word(text, (x, y),
                       color)
@@ -231,9 +237,9 @@ class View:
         boxes = self.buttons(["Level 1", "Level 2", "Level 3", "Level 4", "Level 5"],
                              (self.RES_X//4, 180), C_LEAF)
         boxes += self.buttons(["Level 6", "Level 7", "Level 8", "Level 9", "Level 10"],
-                             (3*self.RES_X//4, 180), C_LEAF)
+                              (3*self.RES_X//4, 180), C_LEAF)
         y = boxes[-1].bottom+(self.RES_Y-boxes[-1].bottom)//2
-        menu = self.word("Main menu", (self.RES_X//2, y), 
-                         color=pygame.Color('white'), 
+        menu = self.word("Main menu", (self.RES_X//2, y),
+                         color=pygame.Color('white'),
                          background=pygame.Color('dodgerblue'))
         return [menu]+boxes
