@@ -26,18 +26,19 @@ class Game():
         self.LOOP_CLOCK = USEREVENT+3
 
         self.screen = Screen.MENU
+        pygame.init()
         self.setup()
         self.run()
 
-    def initialize(self, level=1, size=(20, 22), shift_time=1000):
-        self.key_flags = list()
+    def initialize(self, level=1, size=(20, 22), shift_time=1000, wallrate=0.45, exits=None):
+        self.key_flags = set()
         self.current_level = level
         self.width, self.height = size
         self.draw.set_dimensions(self.width, self.height)
         if self.width < 5 or self.height < 5:
-            raise Exception("Maze dimensions too small! \
+            raise ValueError("Maze dimensions too small! \
                 ({}, {})".format(self.width, self.height))
-        self.maze = wall.Wall(self.draw, self.width, self.height)
+        self.maze = wall.Wall(self.draw, self.width, self.height, exits=exits, wallrate=wallrate)
         self.timer = shift_time
         pygame.time.set_timer(self.LOOP_SHIFT, self.timer)  # loop for shift
         self.level_end = False
@@ -106,8 +107,9 @@ class Game():
             self.initialize(level=level)
         else:
             self.initialize(level=level, size=(
-                params['width'], params['height']), shift_time=params['timer'])
-            # , wallrate=params.get('wallrate'), exits=params.get('exits')
+                params['width'], params['height']), shift_time=params['timer'],
+                wallrate=params.get('wallrate', 0.45), exits=params.get('exits')
+            )
 
     def read_levels(self):
         # read levels
@@ -142,7 +144,7 @@ class Game():
         if event.type == self.LOOP_SHIFT:
             self.maze.handle_shift()
         elif event.type == pygame.KEYDOWN:
-            self.key_flags.append(event.key)
+            self.key_flags.add(event.key)
             pygame.time.set_timer(self.LOOP_KEY, 200)  # hold down loop
         if event.type == pygame.KEYDOWN or event.type == self.LOOP_KEY:
             for key in self.key_flags:
@@ -151,7 +153,7 @@ class Game():
                 self.paused = self.pause_game(self.paused, anim['pause'])
                 self.maze.move(anim, self.paused)
         elif event.type == pygame.KEYUP:
-            self.key_flags.remove(event.key)
+            self.key_flags.discard(event.key)
             if not self.key_flags:
                 pygame.time.set_timer(self.LOOP_KEY, 0)
         elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -201,6 +203,8 @@ class Game():
         return anim
 
     def pause_game(self, old, change):
+        if self.maze.is_end_game():
+            return old
         if not old and change:
             pygame.time.set_timer(self.LOOP_SHIFT, 0)
             self.pause_start = pygame.time.get_ticks()
