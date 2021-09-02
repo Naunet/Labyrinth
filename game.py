@@ -2,6 +2,7 @@
 import pygame
 from pygame.constants import *
 import time
+import json
 from enum import Enum
 # local
 import view
@@ -102,7 +103,7 @@ class Game():
                     self.screen = Screen.GAME
 
     def setup_level(self, level):
-        params = self.levels.get(level)
+        params = self.levels.get(str(level))
         if not params:
             self.initialize(level=level)
         else:
@@ -114,26 +115,8 @@ class Game():
     def read_levels(self):
         # read levels
         levelfile = open('levels.txt', 'r+')
-        lines = levelfile.readlines()
+        self.levels = json.load(levelfile) # dictionary
         levelfile.close()
-        # creat dictionary
-        self.levels = dict()
-        while lines:
-            while lines[0] == '\n':
-                lines.pop(0)
-            number = int(lines.pop(0))
-            timer = int(lines.pop(0))
-            width = int(lines.pop(0))
-            height = int(lines.pop(0))
-            level = dict(timer=timer, width=width, height=height)
-            tmp = lines.pop(0)
-            if tmp != '\n':
-                level["wallrate"] = float(tmp)
-                tmp = lines.pop(0)
-            if tmp != '\n':
-                exits = eval(tmp)
-                level["exits"] = exits
-            self.levels[number] = level
 
     def play(self, event):
         back = self.draw.header(self.current_level, self.paused,
